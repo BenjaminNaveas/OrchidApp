@@ -1,6 +1,10 @@
 <template>
     <div class="flex flex-col items-center justify-center min-h-screen bg-gray-100">
         <h1 class="text-2xl font-bold mb-4">Dashboard - Datos de Sensores</h1>
+        <!-- Componente de Notificaciones -->
+        <div class="w-full max-w-4xl mb-6">
+            <NotificationsView />
+        </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-4xl">
             <div
                 v-for="sensor in sensors"
@@ -31,8 +35,12 @@
 
 <script>
 import axios from "axios";
+import NotificationsView from "./NotificationsView.vue"; // Asegúrate de que la ruta sea correcta
 
 export default {
+    components: {
+        NotificationsView,
+    },
     data() {
         return {
             sensors: [],

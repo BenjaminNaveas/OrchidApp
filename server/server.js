@@ -6,6 +6,7 @@ const app = express();
 const authRoutes = require('./routes/auth.routes');
 const environmentalRoutes = require('./routes/environmental.routes');
 const irrigationRoutes = require('./routes/irrigation.routes'); // Nueva ruta para calendario de riego
+const notificationRoutes = require('./routes/notifications.routes');
 require('dotenv').config();
 
 // Configuración de la conexión a la base de datos
@@ -31,6 +32,7 @@ app.use(bodyParser.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/environmental', environmentalRoutes);
 app.use('/api/irrigation', irrigationRoutes); // Agregar las rutas de riego
+app.use('/api/notifications', notificationRoutes);
 
 // Endpoint para simular datos de sensores
 app.post('/api/simulate-sensors', (req, res) => {
@@ -67,6 +69,29 @@ app.get('/api/sensor-data', (req, res) => {
         }
     );
 });
+
+// Lógica de actualización periódica del estado de los riegos
+const updateIrrigationStatus = () => {
+    const now = new Date();
+    const formattedNow = now.toISOString().slice(0, 19).replace('T', ' ');
+
+    db.query(
+        `UPDATE irrigation_schedule
+         SET status = 'completado'
+         WHERE CONCAT(scheduled_date, ' ', scheduled_time) <= ? AND status = 'pendiente'`,
+        [formattedNow],
+        (err, results) => {
+            if (err) {
+                console.error('Error al actualizar el estado de los riegos:', err);
+            } else {
+                console.log('Estados de riego actualizados correctamente:', results.affectedRows);
+            }
+        }
+    );
+};
+
+// Ejecutar cada minuto
+setInterval(updateIrrigationStatus, 60000);
 
 // Test Endpoint
 app.get('/', (req, res) => {

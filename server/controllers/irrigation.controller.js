@@ -1,7 +1,6 @@
 const db = require('../config/db.config');
 const jwt = require('jsonwebtoken');
 
-// Obtener todos los eventos de riego
 exports.getAllSchedules = (req, res) => {
     db.query(
         'SELECT id, user_id, scheduled_date, scheduled_time, duration, status FROM irrigation_schedule ORDER BY scheduled_date, scheduled_time ASC',
@@ -10,6 +9,15 @@ exports.getAllSchedules = (req, res) => {
                 console.error('Error al obtener el calendario:', err);
                 res.status(500).json({ message: 'Error al obtener el calendario de riego' });
             } else {
+                const now = new Date();
+                results.forEach(schedule => {
+                    const scheduleTime = new Date(`${schedule.scheduled_date}T${schedule.scheduled_time}`);
+                    const endTime = new Date(scheduleTime.getTime() + schedule.duration * 60000);
+
+                    if (now > endTime) {
+                        schedule.status = 'completado';
+                    }
+                });
                 res.json(results);
             }
         }
@@ -35,6 +43,17 @@ exports.createSchedule = (req, res) => {
                 console.error("Error al crear el evento:", err);
                 res.status(500).json({ message: "Error al crear el evento de riego" });
             } else {
+                // Crear una notificación después de insertar el evento
+                db.query(
+                    'INSERT INTO notifications (user_id, message, created_at) VALUES (?, ?, NOW())',
+                    [user_id, `Nuevo evento de riego programado para ${scheduled_date} a las ${scheduled_time}`],
+                    (err) => {
+                        if (err) {
+                            console.error('Error al crear la notificación:', err);
+                        }
+                    }
+                );
+
                 res.json({ message: "Evento creado exitosamente", id: result.insertId });
             }
         }
