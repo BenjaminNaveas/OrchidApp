@@ -34,6 +34,7 @@ app.use('/api/environmental', environmentalRoutes);
 app.use('/api/irrigation', irrigationRoutes); // Agregar las rutas de riego
 app.use('/api/notifications', notificationRoutes);
 
+
 // Endpoint para simular datos de sensores
 app.post('/api/simulate-sensors', (req, res) => {
     const sensors = [

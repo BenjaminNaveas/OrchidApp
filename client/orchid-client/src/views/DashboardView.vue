@@ -9,11 +9,18 @@
             <div
                 v-for="sensor in sensors"
                 :key="sensor.id"
-                class="p-4 bg-white rounded-lg shadow-md text-center"
+                :class="[
+                    'p-4 rounded-lg shadow-md text-center',
+                    sensor.value < sensor.criticalLow
+                        ? 'bg-red-500 text-white'
+                        : sensor.value > sensor.criticalHigh
+                        ? 'bg-yellow-500 text-white'
+                        : 'bg-green-500 text-white'
+                ]"
             >
                 <h2 class="text-lg font-semibold">{{ sensor.sensor_name }}</h2>
                 <p class="text-4xl font-bold">{{ sensor.value }} {{ sensor.unit }}</p>
-                <p class="text-sm text-gray-500">Registrado: {{ formatDate(sensor.recorded_at) }}</p>
+                <p class="text-sm">Registrado: {{ formatDate(sensor.recorded_at) }}</p>
             </div>
         </div>
         <div class="mt-6 flex flex-col md:flex-row gap-4">
@@ -53,7 +60,14 @@ export default {
         async fetchSensorData() {
             try {
                 const response = await axios.get("http://localhost:3000/api/sensor-data");
-                this.sensors = response.data;
+                // Agrupar por sensor y tomar solo los datos más recientes
+                const groupedSensors = {};
+                response.data.forEach((record) => {
+                    if (!groupedSensors[record.sensor_id] || new Date(record.recorded_at) > new Date(groupedSensors[record.sensor_id].recorded_at)) {
+                        groupedSensors[record.sensor_id] = record;
+                    }
+                });
+                this.sensors = Object.values(groupedSensors);
             } catch (error) {
                 console.error("Error al obtener los datos de los sensores:", error);
             }
@@ -61,7 +75,7 @@ export default {
         async simulateSensors() {
             try {
                 await axios.post("http://localhost:3000/api/simulate-sensors");
-                this.fetchSensorData(); // Actualizar datos después de simular
+                await this.fetchSensorData(); // Actualizar datos después de simular
             } catch (error) {
                 console.error("Error al simular sensores:", error);
             }
