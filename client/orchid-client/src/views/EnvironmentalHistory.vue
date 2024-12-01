@@ -9,6 +9,14 @@
             Volver al Dashboard
         </button>
 
+        <!-- Botón para generar PDF -->
+        <button
+            @click="generatePDF"
+            class="bg-green-500 text-white px-4 py-2 rounded-lg mb-4 ml-4"
+        >
+            Generar Reporte en PDF
+        </button>
+
         <table>
             <thead>
                 <tr>
@@ -47,9 +55,10 @@
     </div>
 </template>
 
-
 <script>
 import axios from "axios";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
 export default {
     data() {
@@ -75,6 +84,33 @@ export default {
             });
         } catch (error) {
             console.error("Error al cargar registros:", error);
+        }
+    },
+    methods: {
+        generatePDF() {
+            const doc = new jsPDF();
+            const tableColumn = ["Sensor", "Tipo", "Valor", "Unidad", "Registrado en"];
+            const tableRows = [];
+
+            this.records.forEach((record) => {
+                const recordData = [
+                    record.name,
+                    record.type,
+                    record.value,
+                    record.unit,
+                    new Date(record.recorded_at).toLocaleString(),
+                ];
+                tableRows.push(recordData);
+            });
+
+            doc.text("Reporte de Historial de Sensores", 14, 10);
+            doc.autoTable({
+                head: [tableColumn],
+                body: tableRows,
+                startY: 20,
+            });
+
+            doc.save("Historial_Sensores.pdf");
         }
     }
 };

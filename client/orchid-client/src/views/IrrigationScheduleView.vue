@@ -1,14 +1,23 @@
 <template>
     <div class="flex flex-col items-center justify-center min-h-screen bg-gray-100">
         <h1 class="text-2xl font-bold mb-4">Calendario de Riego</h1>
-        
+
         <!-- Botón para volver al Dashboard -->
-        <button
-            @click="$router.push('/dashboard')"
-            class="bg-blue-500 text-white px-4 py-2 rounded-lg mb-4"
-        >
-            Volver al Dashboard
-        </button>
+        <div class="flex gap-4 mb-4">
+            <button
+                @click="$router.push('/dashboard')"
+                class="bg-blue-500 text-white px-4 py-2 rounded-lg"
+            >
+                Volver al Dashboard
+            </button>
+            <!-- Botón para generar PDF -->
+            <button
+                @click="generatePDF"
+                class="bg-green-500 text-white px-4 py-2 rounded-lg"
+            >
+                Generar Reporte en PDF
+            </button>
+        </div>
 
         <table class="table-auto border-collapse border border-gray-400 mb-4 w-full max-w-4xl">
             <thead>
@@ -69,6 +78,8 @@
 
 <script>
 import axios from "axios";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
 export default {
     data() {
@@ -110,7 +121,6 @@ export default {
                     }
                 );
 
-                // Limpiar el formulario
                 this.newSchedule = {
                     scheduled_date: "",
                     scheduled_time: "",
@@ -118,7 +128,6 @@ export default {
                     status: "",
                 };
 
-                // Recargar los eventos de riego
                 await this.fetchSchedules();
             } catch (error) {
                 console.error("Error al crear un evento de riego:", error);
@@ -135,6 +144,30 @@ export default {
             } catch (error) {
                 console.error("Error al eliminar el evento de riego:", error);
             }
+        },
+        generatePDF() {
+            const doc = new jsPDF();
+            const tableColumn = ["Fecha", "Hora", "Duración", "Estado"];
+            const tableRows = [];
+
+            this.schedules.forEach((schedule) => {
+                const scheduleData = [
+                    schedule.scheduled_date,
+                    schedule.scheduled_time,
+                    `${schedule.duration} mins`,
+                    schedule.status,
+                ];
+                tableRows.push(scheduleData);
+            });
+
+            doc.text("Reporte de Calendario de Riego", 14, 10);
+            doc.autoTable({
+                head: [tableColumn],
+                body: tableRows,
+                startY: 20,
+            });
+
+            doc.save("Calendario_Riego.pdf");
         },
     },
 };
