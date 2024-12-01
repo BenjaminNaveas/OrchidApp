@@ -1,7 +1,15 @@
 <template>
     <div class="flex flex-col items-center justify-center min-h-screen bg-gray-100">
         <h1 class="text-2xl font-bold mb-4">Calendario de Riego</h1>
-  
+        
+        <!-- Botón para volver al Dashboard -->
+        <button
+            @click="$router.push('/dashboard')"
+            class="bg-blue-500 text-white px-4 py-2 rounded-lg mb-4"
+        >
+            Volver al Dashboard
+        </button>
+
         <table class="table-auto border-collapse border border-gray-400 mb-4 w-full max-w-4xl">
             <thead>
                 <tr class="bg-gray-200">
@@ -29,7 +37,7 @@
                 </tr>
             </tbody>
         </table>
-  
+
         <form @submit.prevent="createSchedule" class="bg-white p-4 rounded-lg shadow-md">
             <h2 class="text-lg font-semibold mb-2">Agregar Evento de Riego</h2>
             <div class="mb-2">
@@ -47,22 +55,22 @@
             <div class="mb-2">
                 <label class="block text-gray-700">Estado:</label>
                 <select v-model="newSchedule.status" class="border px-2 py-1 w-full">
-                  <option value="pendiente">Pendiente</option>
-                  <option value="completado">Completado</option>
+                    <option value="pendiente">Pendiente</option>
+                    <option value="completado">Completado</option>
                 </select>
             </div>
-  
+
             <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded-lg">
                 Agregar
             </button>
         </form>
     </div>
-  </template>
-  
-  <script>
-  import axios from "axios";
-  
-  export default {
+</template>
+
+<script>
+import axios from "axios";
+
+export default {
     data() {
         return {
             schedules: [],
@@ -101,7 +109,7 @@
                         },
                     }
                 );
-  
+
                 // Limpiar el formulario
                 this.newSchedule = {
                     scheduled_date: "",
@@ -109,7 +117,7 @@
                     duration: "",
                     status: "",
                 };
-  
+
                 // Recargar los eventos de riego
                 await this.fetchSchedules();
             } catch (error) {
@@ -129,10 +137,9 @@
             }
         },
     },
-  };
-  </script>
-  
-  <style>
-  /* Agrega estilos personalizados si es necesario */
-  </style>
-  
+};
+</script>
+
+<style>
+/* Agrega estilos personalizados si es necesario */
+</style>

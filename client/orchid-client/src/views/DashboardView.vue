@@ -9,15 +9,14 @@
             <div
                 v-for="sensor in sensors"
                 :key="sensor.id"
-                :class="[
-                    'p-4 rounded-lg shadow-md text-center',
-                    sensor.value < sensor.criticalLow
-                        ? 'bg-red-500 text-white'
-                        : sensor.value > sensor.criticalHigh
-                        ? 'bg-yellow-500 text-white'
-                        : 'bg-green-500 text-white'
-                ]"
+                :class="[ 'p-4 rounded-lg shadow-md text-center flex flex-col items-center' ]"
+                :style="{ backgroundColor: getSensorBackgroundColor(sensor) }"
             >
+                <font-awesome-icon
+                    :icon="getSensorIcon(sensor.sensor_name)"
+                    class="text-5xl mb-2"
+                    :style="{ color: getSensorIconColor(sensor) }"
+                />
                 <h2 class="text-lg font-semibold">{{ sensor.sensor_name }}</h2>
                 <p class="text-4xl font-bold">{{ sensor.value }} {{ sensor.unit }}</p>
                 <p class="text-sm">Registrado: {{ formatDate(sensor.recorded_at) }}</p>
@@ -42,11 +41,18 @@
 
 <script>
 import axios from "axios";
-import NotificationsView from "./NotificationsView.vue"; // Asegúrate de que la ruta sea correcta
+import NotificationsView from "./NotificationsView.vue";
+import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
+import { library } from "@fortawesome/fontawesome-svg-core";
+import { faThermometerHalf, faTint, faWater } from "@fortawesome/free-solid-svg-icons";
+
+// Agregar íconos a la librería
+library.add(faThermometerHalf, faTint, faWater);
 
 export default {
     components: {
         NotificationsView,
+        FontAwesomeIcon,
     },
     data() {
         return {
@@ -58,24 +64,40 @@ export default {
     },
     methods: {
         async fetchSensorData() {
-            try {
-                const response = await axios.get("http://localhost:3000/api/sensor-data");
-                // Agrupar por sensor y tomar solo los datos más recientes
-                const groupedSensors = {};
-                response.data.forEach((record) => {
-                    if (!groupedSensors[record.sensor_id] || new Date(record.recorded_at) > new Date(groupedSensors[record.sensor_id].recorded_at)) {
-                        groupedSensors[record.sensor_id] = record;
-                    }
-                });
-                this.sensors = Object.values(groupedSensors);
-            } catch (error) {
-                console.error("Error al obtener los datos de los sensores:", error);
+    try {
+        const response = await axios.get("http://localhost:3000/api/sensor-data");
+        const groupedSensors = {};
+
+        response.data.forEach((record) => {
+            if (
+                !groupedSensors[record.sensor_id] ||
+                new Date(record.recorded_at) > new Date(groupedSensors[record.sensor_id].recorded_at)
+            ) {
+                groupedSensors[record.sensor_id] = record;
             }
-        },
+        });
+
+        // Añadir niveles críticos específicos para las orquídeas
+        this.sensors = Object.values(groupedSensors).map((sensor) => {
+            switch (sensor.sensor_name.toLowerCase()) {
+                case "sensor de temperatura":
+                    return { ...sensor, criticalLow: 12, criticalHigh: 35 }; // Temperatura para orquídeas
+                case "sensor de humedad":
+                    return { ...sensor, criticalLow: 40, criticalHigh: 80 }; // Humedad para orquídeas
+                case "nivel de agua":
+                    return { ...sensor, criticalLow: 10, criticalHigh: 50 }; // Nivel de agua hipotético
+                default:
+                    return { ...sensor, criticalLow: 0, criticalHigh: 100 };
+            }
+        });
+    } catch (error) {
+        console.error("Error al obtener los datos de los sensores:", error);
+    }
+    },
         async simulateSensors() {
             try {
                 await axios.post("http://localhost:3000/api/simulate-sensors");
-                await this.fetchSensorData(); // Actualizar datos después de simular
+                await this.fetchSensorData();
             } catch (error) {
                 console.error("Error al simular sensores:", error);
             }
@@ -89,6 +111,34 @@ export default {
         },
         formatDate(date) {
             return new Date(date).toLocaleString();
+        },
+        getSensorIcon(sensorName) {
+            switch (sensorName.toLowerCase()) {
+                case "sensor de temperatura":
+                    return "thermometer-half";
+                case "sensor de humedad":
+                    return "tint";
+                case "nivel de agua":
+                    return "water";
+                default:
+                    return "question-circle";
+            }
+        },
+        getSensorBackgroundColor(sensor) {
+    if (sensor.value < sensor.criticalLow) {
+        return "#F87171"; // Rojo (muy bajo)
+    } else if (sensor.value > sensor.criticalHigh) {
+        return "#FBBF24"; // Amarillo (muy alto)
+    }
+    return "#4ADE80"; // Verde (normal)
+},
+        getSensorIconColor(sensor) {
+            if (sensor.value < sensor.criticalLow) {
+                return "#EF4444"; // Rojo
+            } else if (sensor.value > sensor.criticalHigh) {
+                return "#F59E0B"; // Amarillo
+            }
+            return "#10B981"; // Verde
         },
     },
 };

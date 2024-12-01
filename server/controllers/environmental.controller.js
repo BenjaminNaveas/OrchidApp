@@ -1,6 +1,6 @@
 const db = require('../config/db.config');
 
-// Obtener registros ambientales
+// Obtener registros ambientales con niveles críticos
 exports.getEnvironmentalRecords = (req, res) => {
     const query = `
         SELECT r.id, r.value, r.recorded_at, s.name, s.type, s.unit
@@ -15,7 +15,31 @@ exports.getEnvironmentalRecords = (req, res) => {
             return res.status(500).json({ message: "Error al obtener registros ambientales" });
         }
 
-        res.json(results);
+        // Agregar niveles críticos de forma manual
+        const sensorsWithCriticalLevels = results.map((sensor) => {
+            let criticalLow = 0;
+            let criticalHigh = 100;
+
+            // Definir niveles críticos basados en el tipo de sensor
+            if (sensor.name.includes("Temperatura")) {
+                criticalLow = 0;
+                criticalHigh = 40;
+            } else if (sensor.name.includes("Humedad")) {
+                criticalLow = 20;
+                criticalHigh = 80;
+            } else if (sensor.name.includes("Nivel de Agua")) {
+                criticalLow = 10;
+                criticalHigh = 50;
+            }
+
+            return {
+                ...sensor,
+                criticalLow,
+                criticalHigh,
+            };
+        });
+
+        res.json(sensorsWithCriticalLevels);
     });
 };
 
