@@ -2,12 +2,15 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const mysql = require('mysql2');
-const app = express();
+const path = require('path'); // Para servir archivos estáticos
+require('dotenv').config();
+
 const authRoutes = require('./routes/auth.routes');
 const environmentalRoutes = require('./routes/environmental.routes');
 const irrigationRoutes = require('./routes/irrigation.routes'); // Nueva ruta para calendario de riego
 const notificationRoutes = require('./routes/notifications.routes');
-require('dotenv').config();
+
+const app = express();
 
 // Configuración de la conexión a la base de datos
 const db = mysql.createConnection({
@@ -21,6 +24,7 @@ const db = mysql.createConnection({
 db.connect(err => {
     if (err) {
         console.error('Error al conectar con la base de datos:', err);
+        process.exit(1); // Salir si no se puede conectar
     } else {
         console.log('Conectado a la base de datos');
     }
@@ -29,11 +33,12 @@ db.connect(err => {
 // Middlewares
 app.use(cors());
 app.use(bodyParser.json());
+
+// Rutas de la API
 app.use('/api/auth', authRoutes);
 app.use('/api/environmental', environmentalRoutes);
 app.use('/api/irrigation', irrigationRoutes); // Agregar las rutas de riego
 app.use('/api/notifications', notificationRoutes);
-
 
 // Endpoint para simular datos de sensores
 app.post('/api/simulate-sensors', (req, res) => {
@@ -48,7 +53,7 @@ app.post('/api/simulate-sensors', (req, res) => {
         db.query(
             "INSERT INTO environmental_records (sensor_id, value) VALUES (?, ?)",
             [sensor.id, value],
-            (err, result) => {
+            (err) => {
                 if (err) console.error("Error al insertar registro:", err);
             }
         );
@@ -60,10 +65,13 @@ app.post('/api/simulate-sensors', (req, res) => {
 // Endpoint para obtener datos de sensores
 app.get('/api/sensor-data', (req, res) => {
     db.query(
-        "SELECT er.*, s.name AS sensor_name, s.unit FROM environmental_records er JOIN sensors s ON er.sensor_id = s.id ORDER BY er.recorded_at DESC LIMIT 50",
+        `SELECT er.*, s.name AS sensor_name, s.unit 
+         FROM environmental_records er 
+         JOIN sensors s ON er.sensor_id = s.id 
+         ORDER BY er.recorded_at DESC LIMIT 50`,
         (err, results) => {
             if (err) {
-                console.error(err);
+                console.error('Error al obtener los datos de los sensores:', err);
                 return res.status(500).json({ message: "Error al obtener los datos de los sensores" });
             }
             res.json(results);
@@ -84,8 +92,8 @@ const updateIrrigationStatus = () => {
         (err, results) => {
             if (err) {
                 console.error('Error al actualizar el estado de los riegos:', err);
-            } else {
-                console.log('Estados de riego actualizados correctamente:', results.affectedRows);
+            } else if (results.affectedRows > 0) {
+                console.log('Estados de riego actualizados:', results.affectedRows);
             }
         }
     );
@@ -94,11 +102,23 @@ const updateIrrigationStatus = () => {
 // Ejecutar cada minuto
 setInterval(updateIrrigationStatus, 60000);
 
-// Test Endpoint
-app.get('/', (req, res) => {
-    res.send('Backend funcionando');
+// Middleware para manejar errores
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ message: "Error interno del servidor" });
+});
+
+// Configuración para servir archivos estáticos del frontend
+const frontendPath = path.join(__dirname, 'dist');
+app.use(express.static(frontendPath));
+
+// Redirigir todas las rutas al index.html
+app.get('*', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'index.html'));
 });
 
 // Servidor
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => {
+    console.log(`Servidor corriendo en http://localhost:${PORT}`);
+});

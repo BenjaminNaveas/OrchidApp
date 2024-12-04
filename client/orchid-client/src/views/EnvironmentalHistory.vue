@@ -26,7 +26,7 @@
             </div>
 
             <!-- Filtros -->
-            <div class="filters mb-4 flex gap-4 items-center">
+            <div class="filters mb-4 flex gap-4 items-center flex-wrap">
                 <div>
                     <label for="sensor-filter" class="font-bold">Filtrar por Sensor:</label>
                     <select
@@ -52,6 +52,26 @@
                         <option value="asc">Ascendente</option>
                         <option value="desc">Descendente</option>
                     </select>
+                </div>
+                <div>
+                    <label for="date-from" class="font-bold">Desde:</label>
+                    <input
+                        type="date"
+                        id="date-from"
+                        v-model="dateFrom"
+                        @change="applyFilters"
+                        class="border border-gray-400 rounded-lg px-3 py-1"
+                    />
+                </div>
+                <div>
+                    <label for="date-to" class="font-bold">Hasta:</label>
+                    <input
+                        type="date"
+                        id="date-to"
+                        v-model="dateTo"
+                        @change="applyFilters"
+                        class="border border-gray-400 rounded-lg px-3 py-1"
+                    />
                 </div>
             </div>
 
@@ -107,6 +127,8 @@ export default {
             filteredRecords: [],
             selectedSensor: "",
             dateOrder: "asc",
+            dateFrom: "",
+            dateTo: "",
         };
     },
     async created() {
@@ -137,6 +159,20 @@ export default {
             // Filtrar por sensor
             if (this.selectedSensor) {
                 records = records.filter((record) => record.type === this.selectedSensor);
+            }
+
+            // Filtrar por rango de fechas
+            if (this.dateFrom) {
+                const from = new Date(this.dateFrom);
+                records = records.filter(
+                    (record) => new Date(record.recorded_at) >= from
+                );
+            }
+            if (this.dateTo) {
+                const to = new Date(this.dateTo);
+                records = records.filter(
+                    (record) => new Date(record.recorded_at) <= to
+                );
             }
 
             // Ordenar por fecha
