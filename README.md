@@ -28,3 +28,17 @@ OrchidApp es una aplicación web diseñada para gestionar sensores ambientales, 
 - Axios para solicitudes HTTP
 - Body-parser y CORS para middlewares
 - Path para servir archivos estáticos
+
+### Vista Previa
+
+- ![image](https://github.com/user-attachments/assets/ff25d54f-eeb4-4f17-8312-73e9f7448423)
+- ![image](https://github.com/user-attachments/assets/ff58941d-e28d-496c-a897-432dd31a19ab)
+- ![image](https://github.com/user-attachments/assets/c39d82dc-b334-4c6d-8d3e-db9852e495dd)
+- ![image](https://github.com/user-attachments/assets/8081e8bb-ec94-4c2d-968b-568a6528546e)
+- ![image](https://github.com/user-attachments/assets/1c54f34f-5fa8-407e-b824-9468903b8248)
+
+
+
+
+
+
