@@ -2,19 +2,26 @@
     <div class="flex items-center justify-center min-h-screen bg-gray-100">
         <form @submit.prevent="login" class="bg-white p-6 rounded-lg shadow-md max-w-sm w-full">
             <h1 class="text-2xl font-bold text-center mb-6">Iniciar Sesión</h1>
-            <div>
+            <div> 
                 <label for="username" class="block text-sm font-medium text-gray-700">Usuario:</label>
-                <input
+               <br> 
+               
+               <input
+                    size="40"
                     v-model="username"
                     type="text"
                     id="username"
                     required
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
+                
+                
             </div>
             <div class="mt-4">
                 <label for="password" class="block text-sm font-medium text-gray-700">Contraseña:</label>
+                <br>
                 <input
+                    size="40"
                     v-model="password"
                     type="password"
                     id="password"
@@ -22,6 +29,7 @@
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
             </div>
+            <br>
             <button
                 type="submit"
                 class="w-full mt-4 bg-green-600 text-white p-2 rounded-lg hover:bg-green-700"
@@ -70,4 +78,14 @@ export default {
         },
     },
 };
+
 </script>
+<style>
+div{
+    font-size: large;
+    
+}
+input{
+    font-size: large;
+}
+</style>

@@ -1,10 +1,10 @@
 const db = require('../config/db.config');
 
-// Obtener notificaciones para un usuario
+// Obtener las últimas 3 notificaciones para un usuario
 exports.getNotifications = (req, res) => {
     const userId = req.userId; // Obtenemos el user_id del token
     db.query(
-        'SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC',
+        'SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 3',
         [userId],
         (err, results) => {
             if (err) {

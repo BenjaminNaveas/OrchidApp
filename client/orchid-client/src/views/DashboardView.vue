@@ -1,83 +1,86 @@
 <template>
     <div class="flex flex-col items-center justify-center min-h-screen bg-gray-100">
         <!-- Nuevo encabezado -->
-        <div class="w-full bg-gradient-to-r from-blue-600 to-green-500 text-white py-6 text-center shadow-md">
-            <h1 class="text-3xl font-bold">🌿 Datos de Sensores 🌡️</h1>
-        </div>
-
-        <!-- Componente de Notificaciones -->
-        <div class="w-full max-w-4xl mb-6">
-            <NotificationsView />
-        </div>
-
-        <!-- Rediseño de las tarjetas -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl">
-            <div
-                v-for="sensor in sensors"
-                :key="sensor.id"
-                :class="[ 'p-6 rounded-xl shadow-lg text-center flex flex-col items-center transform transition-transform hover:scale-105' ]"
-                :style="{ backgroundColor: getSensorBackgroundColor(sensor) }"
-            >
-                <font-awesome-icon
-                    :icon="getSensorIcon(sensor.sensor_name)"
-                    class="text-6xl mb-4"
-                    :style="{ color: getSensorIconColor(sensor) }"
-                />
-                <h2 class="text-xl font-semibold text-white">{{ sensor.sensor_name }}</h2>
-                <p class="text-5xl font-bold text-white">{{ sensor.value }} {{ sensor.unit }}</p>
-                <p class="text-sm text-white">Registrado: {{ formatDate(sensor.recorded_at) }}</p>
+        <header>
+            <div class="w-full bg-gradient-to-r from-blue-600 to-green-500 text-white py-6 shadow-md">
+                <div class="container mx-auto flex justify-between items-center px-6">
+                    <h1 class="text-3xl font-bold">🌿 Datos de Sensores 🌡️</h1>
+                    <nav class="flex space-x-6">
+                        <a @click.prevent="goToHistory" href="#" class="nav-link">Ver Historial</a>
+                        <a @click.prevent="$router.push('/irrigation')" href="#" class="nav-link">Calendario de Riego</a>
+                        <a @click.prevent="logout" href="#" class="nav-link text-red-300 hover:text-red-500">Cerrar Sesión</a>
+                    </nav>
+                </div>
             </div>
-        </div>
+        </header>
+        <body>
+            <div class="content-container flex w-full max-w-6xl gap-12 px-6">
+                <!-- Columna Izquierda: Notificaciones y Alertas -->
+                <div class="left-column flex flex-col w-1/3 space-y-8">
+                    <!-- Sección de Notificaciones -->
+                    <div class="notification-container">
+                       
+                        <NotificationsView />
+                    </div>
+                    <!-- Sección de Alertas -->
+                    <div class="alert-container">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4">Alertas Detectadas:</h2>
+                        <div v-if="criticalAlerts.length > 0" class="space-y-4">
+                            <div
+                                v-for="alert in criticalAlerts"
+                                :key="alert.sensor"
+                                class="bg-red-500 text-white p-4 rounded-lg shadow-lg"
+                            >
+                                <h3 class="text-lg font-bold">¡Alerta Crítica!</h3>
+                                <p>
+                                    El sensor <strong>{{ alert.sensor }}</strong> está en un estado crítico:
+                                    <strong>{{ alert.value }} {{ alert.unit }}</strong>.
+                                </p>
+                            </div>
+                            <button
+                                @click="hideAlerts"
+                                class="mt-4 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded shadow"
+                            >
+                                Ocultar Alertas
+                            </button>
+                        </div>
+                        <p v-else class="text-gray-600 italic text-center">No hay alertas actualmente.</p>
+                    </div>
+                </div>
 
-        <!-- Botones de acción -->
-        <div class="mt-6 flex flex-col md:flex-row gap-4">
-            <button
-                @click="simulateSensors"
-                class="bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white px-6 py-2 rounded-lg shadow-md transition-all"
-            >
-                Simular Sensores
-            </button>
-            <button
-                @click="goToHistory"
-                class="bg-gradient-to-r from-blue-400 to-indigo-500 hover:from-blue-500 hover:to-indigo-600 text-white px-6 py-2 rounded-lg shadow-md transition-all"
-            >
-                Ver Historial
-            </button>
-            <button
-                @click="$router.push('/irrigation')"
-                class="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white px-6 py-2 rounded-lg shadow-md transition-all"
-            >
-                Ver Calendario de Riego
-            </button>
-            <button
-                @click="logout"
-                class="bg-gradient-to-r from-red-400 to-pink-500 hover:from-red-500 hover:to-pink-600 text-white px-6 py-2 rounded-lg shadow-md transition-all"
-            >
-                Cerrar Sesión
-            </button>
-        </div>
+                <!-- Columna Derecha: Sensores y Botón -->
+                <div class="right-column flex flex-col w-2/3">
+                    <!-- Contenedor de Sensores -->
+                    <div class="sensor-container grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div
+                            v-for="sensor in sensors"
+                            :key="sensor.id"
+                            :class="[ 'p-6 rounded-xl shadow-lg text-center flex flex-col items-center transform transition-transform hover:scale-105' ]"
+                            :style="{ backgroundColor: getSensorBackgroundColor(sensor) }"
+                        >
+                            <font-awesome-icon
+                                :icon="getSensorIcon(sensor.sensor_name)"
+                                class="text-6xl mb-4"
+                                :style="{ color: getSensorIconColor(sensor) }"
+                            />
+                            <h2 class="text-xl font-semibold text-white">{{ sensor.sensor_name }}</h2>
+                            <p class="text-5xl font-bold text-white">{{ sensor.value }} {{ sensor.unit }}</p>
+                            <p class="text-sm text-white">Registrado: {{ formatDate(sensor.recorded_at) }}</p>
+                        </div>
+                    </div>
 
-        <!-- Modal de notificación -->
-        <div
-            v-if="criticalAlert"
-            class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
-        >
-            <div class="bg-white p-6 rounded-lg shadow-lg text-center max-w-md">
-                <h2 class="text-2xl font-bold text-red-500 mb-4">
-                    ¡Alerta Crítica!
-                </h2>
-                <p class="text-gray-700 mb-6">
-                    El sensor <strong>{{ criticalAlert.sensor }}</strong> ha detectado un valor
-                    crítico: <strong>{{ criticalAlert.value }} {{ criticalAlert.unit }}</strong>.
-                </p>
-                <button
-                    @click="closeAlert"
-                    class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg"
-                >
-                    Cerrar
-                </button>
+                    <!-- Botón de Simular Sensores -->
+                    <div class="simulate-button-container flex justify-center">
+                        <button
+                            @click="simulateSensors"
+                            class="bg-gradient-to-r from-green-400 to-blue-500 hover:from-green-500 hover:to-blue-600 text-white px-6 py-2 rounded-lg shadow-md transition-all"
+                        >
+                            Simular Sensores
+                        </button>
+                    </div>
+                </div>
             </div>
-        </div>
+        </body>
     </div>
 </template>
 
@@ -98,7 +101,7 @@ export default {
     data() {
         return {
             sensors: [],
-            criticalAlert: null, // Estado para alertas críticas
+            criticalAlerts: [], // Almacena todas las alertas críticas detectadas
         };
     },
     async mounted() {
@@ -145,6 +148,21 @@ export default {
                 console.error("Error al simular sensores:", error);
             }
         },
+        checkCriticalAlerts() {
+            this.criticalAlerts = this.sensors
+                .filter(
+                    (sensor) =>
+                        sensor.value < sensor.criticalLow || sensor.value > sensor.criticalHigh
+                )
+                .map((sensor) => ({
+                    sensor: sensor.sensor_name,
+                    value: sensor.value,
+                    unit: sensor.unit,
+                }));
+        },
+        hideAlerts() {
+            this.criticalAlerts = [];
+        },
         goToHistory() {
             this.$router.push("/history");
         },
@@ -183,32 +201,65 @@ export default {
             }
             return "#10B981"; // Verde
         },
-        checkCriticalAlerts() {
-            const critical = this.sensors.find(
-                (sensor) =>
-                    sensor.value < sensor.criticalLow || sensor.value > sensor.criticalHigh
-            );
-            if (critical) {
-                this.criticalAlert = {
-                    sensor: critical.sensor_name,
-                    value: critical.value,
-                    unit: critical.unit,
-                };
-            }
-        },
-        closeAlert() {
-            this.criticalAlert = null;
-        },
     },
 };
 </script>
 
 <style>
+header{
+text-align: center;
+background-color: rgba(255, 255, 255, 0);
+font-size: large;
+}
 body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
     background: linear-gradient(135deg, #4CAF50, #2196F3);
     background-size: cover;
     background-attachment: fixed;
     font-family: "Roboto", sans-serif;
     color: #333;
+}
+.nav-link {
+    padding: 2% 5%;
+    text-decoration: none;
+    color: white;
+    font-weight: bold;
+    transition: background-color 0.2s ease-in-out;
+}
+.nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 0.5rem;
+}
+.content-container {
+    display: flex;
+    gap: 10rem;
+    padding-bottom: 20%;
+}
+.notification-container,
+.alert-container {
+    max-width: 500px;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin: 2rem auto;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.sensor-container {
+    margin-bottom: 2rem;
+    max-width: 500px;
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin: 1rem auto;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.simulate-button-container {
+    margin-top: 1rem;
 }
 </style>
